@@ -1,37 +1,72 @@
 import numpy as np
 import sys
 from collections import defaultdict
+import pandas as pd
 
 lenAlphabet = 256
 
 def getSuffixArray(text):
-    suffixes = [(text[i:], i) for i in range(len(text))]
+    suffixes = [(text[i:], i) for i in range(len(text))] # tuple (suffix, suffix start index)
     suffixes.sort()
-    suffixArray = [suffix[1] for suffix in suffixes]
-    return np.array(suffixArray)
+    #suffixArray = [suffix[1] for suffix in suffixes]
+    return np.array(suffixes)
+
 
 
 def getBWT(suffixArray, text):
     bwt = []
     textLen = len(text)
-    for arr in suffixArray:
-        pos = textLen - len(arr) - 1
-        if pos < 0:
+    for idx in suffixArray:
+        if idx == 0:
             bwt.append('$')
         else:
-            bwt.append(text[pos]) 
+            bwt.append(text[idx-1]) 
+    return np.array(bwt)
 
 
-def getFirstAndRanks(sortedBWT):
-    sortedBWT = np.sort(sortedBWT)
-    counts = defaultdict(int)
+
+def getFirstAndRanks(bwt):
+
+    # calc ranks
+    counts = np.zeros(lenAlphabet, dtype=int)
+    ranks = np.zeros((lenAlphabet, len(bwt)), dtype=int)
+    for i, char in enumerate(bwt):
+        if i > 0:    
+            ranks[:,i] = ranks[:,i-1].copy()
+        ranks[ord(char),i] += 1
+        counts[ord(char)] += 1
+
+    # calc first
     first = defaultdict(int)
-    ranks = defaultdict(np.zeros(len(sortedBWT)))
-    for i, char in enumerate(sortedBWT):
-        if first[char] == 0:
-            first[char] = i
-        counts[char] += 1
-        ranks[]
+    sortedBWT = np.sort(bwt)
+    
+    sortedBWTIdx = 0
+    letter = sortedBWT[sortedBWTIdx]
+    first[letter] = 0
+    for _ in range(1, np.sum(counts > 0)):
+        sortedBWTIdx += counts[ord(letter)]
+        letter = sortedBWT[sortedBWTIdx]
+        first[letter] = counts[ord(letter)]
+
+    return dict(first), ranks
+
+
+
+def fm_idx_search(pattern, first, ranks, len_text):
+    left = 0
+    right = len(len_text) - 1
+    for i in range(len(pattern)-1, -1, -1):
+        char = pattern[i]
+        try:
+            left = first[char] + (ranks[ord(char), left-1] if left > 0 else 0)
+            right = first[char] + ranks[ord(char), right] - 1
+        except KeyError:
+            return -1
+        if left > right:
+            return -1
+        
+    return left, right
+
 
 
 def main():
@@ -41,7 +76,30 @@ def main():
         lines = f.readlines()
         text = ''.join(lines)
     text+='$'
-    print(text)
+
+    suffixes = getSuffixArray(text)
+    suffixArray = suffixes[:,1].astype(int)
+    bwt = getBWT(suffixArray, text)
+    first, ranks = getFirstAndRanks(bwt)
+    ranks_vis = np.int32([ranks[ord(char)] for char in bwt]).T
+
+    df = pd.DataFrame({
+        'Index': range(len(suffixArray)),
+        'Suffix': suffixes[:,0],
+        'Suffix Array': suffixArray,
+        'BWT': bwt,
+        'sorted BWT': np.sort(bwt),
+        'ranks: '+str([str(char) for char in bwt]): [ranks_vis[i,:] for i in range(ranks_vis.shape[0])]
+    })
+    print(df.to_string(index=False))
+    print('first: ', first)
+    
+    result = fm_idx_search(pattern, first, ranks, text)
+    if result == -1:
+        print(f'Pattern "{pattern}" not found in text.')
+    else:
+        print(f'Pattern found at positions {suffixArray[result[0]:result[1]+1]} in text.')
+
 
 if __name__ == "__main__":
     main()
