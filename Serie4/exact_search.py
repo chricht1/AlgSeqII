@@ -5,6 +5,21 @@ import pandas as pd
 
 lenAlphabet = 256
 
+
+class color:
+   PURPLE = '\033[95m'
+   CYAN = '\033[96m'
+   DARKCYAN = '\033[36m'
+   BLUE = '\033[94m'
+   GREEN = '\033[92m'
+   YELLOW = '\033[93m'
+   RED = '\033[91m'
+   BOLD = '\033[1m'
+   UNDERLINE = '\033[4m'
+   END = '\033[0m'
+
+
+
 def getSuffixArray(text):
     suffixes = [(text[i:], i) for i in range(len(text))] # tuple (suffix, suffix start index)
     suffixes.sort()
@@ -46,7 +61,7 @@ def getFirstAndRanks(bwt):
     for _ in range(1, np.sum(counts > 0)):
         sortedBWTIdx += counts[ord(letter)]
         letter = sortedBWT[sortedBWTIdx]
-        first[letter] = counts[ord(letter)]
+        first[letter] = sortedBWTIdx
 
     return dict(first), ranks
 
@@ -60,6 +75,8 @@ def fm_idx_search(pattern, first, ranks, len_text):
         try:
             left = first[char] + (ranks[ord(char), left-1] if left > 0 else 0)
             right = first[char] + ranks[ord(char), right] - 1
+            #print(first[char], (ranks[ord(char), left-1] if left > 0 else 0), ranks[ord(char), right])
+            #print(f'After processing char "{char}": left={left}, right={right}')
         except KeyError:
             return -1
         if left > right:
@@ -71,10 +88,14 @@ def fm_idx_search(pattern, first, ranks, len_text):
 
 def main():
     pattern = sys.argv[1]
-    textFpath = 'text.txt'
+    textFpath = 'text2.txt'
     with open(textFpath, 'r') as f:
         lines = f.readlines()
-        text = ''.join(lines)
+        #text = ''.join(lines)
+        text = ''
+        for line in lines:
+            text += line.replace('\n', '')
+        text = text.replace(' ', '_')
     text+='$'
 
     suffixes = getSuffixArray(text)
@@ -85,20 +106,29 @@ def main():
 
     df = pd.DataFrame({
         'Index': range(len(suffixArray)),
-        'Suffix': suffixes[:,0],
-        'Suffix Array': suffixArray,
-        'BWT': bwt,
-        'sorted BWT': np.sort(bwt),
-        'ranks: '+str([str(char) for char in bwt]): [ranks_vis[i,:] for i in range(ranks_vis.shape[0])]
+        '| Suffix': suffixes[:,0],
+        '| Suffix Array': suffixArray,
+        '| BWT': bwt,
+        '| sorted BWT': np.sort(bwt),
+        '| ranks: '+str([str(char) for char in bwt]): [ranks_vis[i,:] for i in range(ranks_vis.shape[0])]
     })
-    print(df.to_string(index=False))
-    print('first: ', first)
+    with open('control_table.txt', 'w') as f:
+        f.write(df.to_string(index=False))
+        f.write('first: ' + str(first) + '\n')
+    #print(df.to_string(index=False))
+    #print('first: ', first)
     
     result = fm_idx_search(pattern, first, ranks, text)
+    positions = suffixArray[result[0]:result[1]+1]
     if result == -1:
         print(f'Pattern "{pattern}" not found in text.')
     else:
-        print(f'Pattern found at positions {suffixArray[result[0]:result[1]+1]} in text.')
+        print(f'Pattern found at positions {positions} in text.')
+
+    for pos in sorted(positions, reverse=True):
+            text = text[:pos] + color.RED + text[pos:pos+len(pattern)] + color.END + text[pos+len(pattern):]
+
+    print(text.replace('_', ' '))
 
 
 if __name__ == "__main__":
