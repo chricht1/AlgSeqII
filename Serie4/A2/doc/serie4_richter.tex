@@ -1,0 +1,119 @@
+\documentclass[ngerman]{mluexercise}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usepackage{textcomp}
+\usepackage{pgfplots}
+\usepackage{graphicx}
+\usepackage{scalerel,amssymb}
+\graphicspath{ {./images/} }
+%\addbibresource{quellen.bib}
+\lecture{Algorithmen auf Sequenzen II}
+\studentname{Christian Mathias Richter} % Full name
+\studentsymbol{amrms} % University IT shorthand symbol ("5-Steller")
+\exercise{4}
+
+\begin{document}
+\maketitle
+\setcounter{section}{0}
+\section{}
+\section{}
+\subsection{}
+Trimmomatic Aufruf:
+\texttt{input=../../Data/SRR1258470/SRR1258470.fastq.gz\\
+output=SRR1258470_trimmed.fastq.gz\\
+trimmomatic SE -phred33 -trimlog SRR1248470_trimlog.log $input $output HEADCROP:10 TAILCROP:10 LEADING:28 TRAILING:28 MINLEN:20}
+
+\subsection{}
+
+\textbf{Allgemeine Daten:}\\
+Die Sequenzlängen haben sich von 101 auf 20-81 geändert, der GC-Gehalt ist nur um 1\% auf 39\% gesunken. 
+Es wurden 13803030-13800105=2925 Reads entfernt, also ein sehr kleiner Anteil.
+
+
+\textbf{Per base sequence quality:}\\
+Bewertung: normal\\
+Da an beiden Enden jeweils mindestens 10 bp der Reads entfernt wurden sind die Scores dieser Positionen, 
+welche i. A. etwas niedriger waren, als die mittleren, nun nicht mehr zusehen. 
+Außerdem wurden von beiden Enden Basen mit Qualität <28 entfernt, 
+dadurch sind die Scores an den Rändern der getrimmten Reads sind etwas höher,
+man kann mit bloßem Auge aber kaum einen Unterschied in den Boxplots der verbliebenen Positionen Qualitätsscores erkennen.
+Die Bewertung war vor der Trimming schon gut und kann sich nicht verlechtert haben. 
+
+
+\textbf{Per tile sequence quality:}\\
+Bewertung: leicht abnormal\\
+Es ist kein großer Unterschied in den verbliebenen Positionen zu erkennen. 
+Nur manche Tiles mit besserer Qualität als der Durchschnitt heben sich noch etwas mehr vom Durchschnitt ab.  
+Für diese Tiles, werden teilweise aber nur Positionen mit durschnittlicher Qualität entfernt, 
+wordurch die Ursache für die Verbesserung zunächst nicht klar wird.
+Die Bewertung hat sich allerdings verbessert, sodass die Stärke der roten Farbe doch abgenommen haben sollte.
+
+
+
+\textbf{Per sequence quality scores:}\\
+Bewertung: normal\\
+Der Peak der Scoreverteilung ist nun bei 39 statt bei 38, dies ist ungewöhnlich, 
+da eigentlich durch das Cropping am Anfang und Ende nach der \enquote{Per base sequence quality}-Abbildung 
+nur wenige Basen mit einem Score von 38 entfernt wurden.
+Der mittlere Quaitätsscore hat sich also verbessert, was nicht verwunderlich ist.
+Außerdem ist der kleinste Score nun bei 18 statt 2, da wir die Basen am Rand mit den niedrigsten Scores entfernt haben.
+
+
+\textbf{Per base sequence content:}\\
+Bewertung: normal\\
+Durch das Cropping am Anfang wurde ein Großteil der Positionen am Anfang mit den großen Abweichungen 
+der Basengehalte zu den restlichen Positionen entfernt.
+Durch das weitere Trimming von Basen am Anfang mit niedriger Qualität konnten auch die AT- und vorallem die GC-Gehalte
+direkt nach dem Cropping angeglichen werden.
+
+Durch das Entfernen der letzten 10 Positionen ist auch das Auseinanderlaufen der AT-Gehalte am Ende nicht mehr so stark sichtbar.
+
+Ansonsten sehen die Kurven ähnlich aus, in mittleren Positionen sollte sich auch nicht viel verändert haben.
+
+
+\textbf{Per sequence GC content:}\\
+Bewertung: leicht normal\\
+Die Plots zwischen ungetrimmten und getrimmten Reads sehen relativ ähnlich zueinander aus, obwohl bei den getrimmten Reads, 
+ist die empirische Verteilung zur theoretischen etwas mehr nach links verschoben und weist keinen so starken Peak mehr auf.
+Es wird auch sichtbar, dass beide Verteilungen bei den getrimmten Reads etwas nach links gerückt sind.
+Dies ist erklärbar dadurch, 
+dass die Teile der Reads am Anfang mit durchschnittlich deutlich höherem GC-Gehalt, als an den späteren Positionen entfernt wurden.
+Am Anfang war zusätzlich auch der mittlere T-Gehalt stark gesenkt.
+Die abstumpfung des Peaks könnte daher kommen, 
+dass durch das Trimming mit dem Schwellwert für den Score die Sequenzen jetzt unterschiedliche Längen haben.
+Dadurch könnte auch mehr Varianz bei den GC-Gehalten entstehen.
+
+
+
+\textbf{Per sequence GC content:}\\
+Bewertung: normal\\
+Es waren vorher auch schon so gut wie gar keine Basen nicht-identifizierbar, man sieht keine Verbesserung.
+
+
+\textbf{Sequence Length Distribution:}\\
+Bewertung: leicht abnormal\\
+Man sieht an der Längenverteilung der getrimmten Reads, dass fast nur Reads der Länge 80-81 vorkommen.
+Betrachtet man aber die Qualitäten, so weiß man, dass diese Reads fast nur die Länge 81 haben müssen, 
+da die Reads vor dem Trimmen alle Länge 101 hatten
+und zusätzlich zu dem Cropping kaum Reads weiterhin getrimmt worden sein dürften wegen der höheren Qualität.  
+Komischerweise geht die x-Achse der Verteilung bis zur Länge 18-19, sie sollte nur bis 20 gehen.
+Die Warnung, die Fastqc hier ausgibt kann ignoriert werden, da es gerade gewollt war, 
+dass Sequenzen getrimmt werden.
+
+
+\textbf{Sequence Duplication Levels:}\\
+Bewertung: stark abnormal\\
+Die Duplikatzahlen sind nach der Behandlung kaum unterschiedlich, 
+lediglich bei der Häufigkeit der einfach vorhandenen Sequenzen sieht man eine deutliche Reduktion. 
+Da nur aber 0,02\% der Sequenzen entfernt wurden, bedeutet dies, 
+dass durch das Trimming mehr Duplikate entstanden sein müssen, was man auch in der leichten Erhöhung der Duplikationslevel
+bei 9, >10, und >50 auch sehen kann.
+
+
+
+
+\end{document}

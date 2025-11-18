@@ -1,0 +1,23 @@
+ Index | Suffix  | Suffix Array | BWT | sorted BWT (F) | ranks: ['g', 'c', '$', 'a', 'a', 'a', 'c']
+     0        $               6     g                $                        [1, 0, 0, 0, 0, 0, 0]
+     1    aacg$               2     c                a                        [1, 1, 0, 0, 0, 0, 1]
+     2  acaacg$               0     $                a                        [1, 1, 1, 0, 0, 0, 1]
+     3     acg$               3     a                a                        [1, 1, 1, 1, 1, 1, 1]
+     4   caacg$               1     a                c                        [1, 1, 1, 2, 2, 2, 1]
+     5      cg$               4     a                c                        [1, 1, 1, 3, 3, 3, 1]
+     6       g$               5     c                g                        [1, 2, 1, 3, 3, 3, 2]
+first: {np.str_('$'): 0, np.str_('a'): np.int64(1), np.str_('c'): np.int64(4), np.str_('g'): np.int64(6)}
+pattern search
+###############
+start with empty pattern
+L: 0	 R: 6
+Iteration: 0
+---------------------
+current pattern suffix: c
+L+: 4	 R+: 5
+Iteration: 1
+---------------------
+current pattern suffix: ac
+L+: 2	 R+: 3
+
+Pattern found at positions [0, 3] in text: acaacg$
