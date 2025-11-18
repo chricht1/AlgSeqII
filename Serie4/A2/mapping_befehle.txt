@@ -1,0 +1,7 @@
+bowtie-build data/GCF_000146045.2/GCF_000146045.2:R64_genome.fna genome_index
+
+bowtie --best -S -p 4 --chunkmbs 200 -x ../../Data/GCF.../genome_index SRR1258470_trimmed.fastq > bowtie_out.sam
+
+
+samtools view -b bowtie_out.sam > bowtie_out.bam
+
