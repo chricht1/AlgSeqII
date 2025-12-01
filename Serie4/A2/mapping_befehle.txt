@@ -4,4 +4,5 @@ bowtie --best -S -p 4 --chunkmbs 200 -x ../../Data/GCF.../genome_index SRR125847
 
 
 samtools view -b bowtie_out.sam > bowtie_out.bam
-
+samtools sort bowtie_out.bam -o bowtie_out_sorted.bam
+samtools index bowtie_out_sorted.bam
