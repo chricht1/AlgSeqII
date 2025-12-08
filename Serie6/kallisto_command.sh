@@ -1,4 +1,4 @@
-kallisto index -t 4 -i Data/Saccharomyces_RefGenome_R64/NCBI_RefSeq_Assembly/kallisto_SRX_trimmed.idx Data/Saccharomyces_RefGenome_R64/NCBI_RefSeq_Assembly/transcripts_gffread.fa
+kallisto index -t 4 -i Data/Saccharomyces_RefGenome_R64/NCBI_RefSeq_Assembly/Kallisto/kallisto_transcr.idx Data/Saccharomyces_RefGenome_R64/NCBI_RefSeq_Assembly/transcripts_gffread.fa
 
 [build] loading fasta file Data/Saccharomyces_RefGenome_R64/NCBI_RefSeq_Assembly/transcripts_gffread.fa
 [build] k-mer length: 31
@@ -32,7 +32,8 @@ CompactedDBG::construct(): Joined 3790 unitigs
 
 
 
-kallisto quant --single -l 200 -s 80 -o Data/Kallisto/ -i Data/Saccharomyces_RefGenome_R64/NCBI_RefSeq_Assembly/kallisto_transcripts_gffread.idx Data/SRR1258470/SRR1258470_trimmed.fastq
+kallisto quant --single -l 200 -s 80 -o Quantification/Pseudo-Alignment_Kallisto/ \
+-i Quantification/Pseudo-Alignment_Kallisto/kallisto_transcr.idx Reads/SRR1258470_trimmed.fastq
 
 
 #kallisto vs bowtie:
