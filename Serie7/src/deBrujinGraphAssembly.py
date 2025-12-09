@@ -1,5 +1,6 @@
 from collections import defaultdict
 import numpy as np
+import os
 
 class DeBrujinGraph:
     def __init__(self, sequences, k):
@@ -7,14 +8,27 @@ class DeBrujinGraph:
 
 
     def construct(self, sequences, k):
-        deBrujinGraph = defaultdict(lambda: defaultdict(int))
+        deBrujinGraph = defaultdict(lambda: defaultdict(bool))
         sequences = [t.upper() for t in sequences] # ignore soft-masked sequences
-        for t in sequences:
-            for i in range(0, len(t)-k+2):
-                kp1mer = t[i:i+k+1]
-                deBrujinGraph[kp1mer[:-1]][kp1mer[-1]] += 1
+        for s in sequences:
+            #print('seq ', s)
+            for i in range(0, len(s)-k+2):
+                kp1mer = s[i:i+k+1]
+                deBrujinGraph[kp1mer[:-1]][kp1mer[-1]] = 1
         
         self.graph = deBrujinGraph
+
+
+    def getUniqueEdgeDegreesNodes(self): # returns dict: node -> [inDegree, outDegree]
+        degrees = defaultdict(lambda: [0,0])
+
+        for node in self.graph:
+            degrees[node][1] = len(self.graph[node])
+            for succBase in self.graph[node]:
+                if degrees[node[1:]+succBase][0] == 0:
+                    degrees[node[1:]+succBase][0] = 1
+
+        return degrees
 
 
     def getDegreesNodes(self): # returns dict: node -> [inDegree, outDegree]
@@ -29,67 +43,90 @@ class DeBrujinGraph:
     
         
 class Assembly:
-    def __init__(self, deBrujinGraph:DeBrujinGraph, outFile:str):
+    def __init__(self, deBrujinGraph:DeBrujinGraph, nodeDegees, outFile:str):
         self.graph = deBrujinGraph
+        self.nodeDegees = nodeDegrees
         self.outFile = outFile
 
-    def findAssemblyEuler(self, nodeDegrees, outFile): # Algorihtm of Hierholzer
-        self.numAssemblies = 0
+    def findAssemblyEuler(self, nodeDegrees): # Algorihtm of Hierholzer
+        self.numPaths = 0
         self.edgeMarks = defaultdict(lambda: defaultdict(int))
-        
+        paths = []
         while 1:
-            assembly = self.findEulerPath(nodeDegrees)
-            if assembly is None:
+            path = self.findEulerPath(nodeDegrees)
+            if path == '':
                 break
-            
-        node = startNode
-        assembly = startNode.key()
-
+            paths.append(path)
+            #print(f'found {self.numPaths} Paths')
+            #print(f'writing Path of len {len(path)} to file')
+        
+        assembly = self.unitePaths(paths)
+        self.writeAssemblyToFile(assembly)
         
 
-    def findEulerPath(self, nodeDegrees):
+    def findEulerPath(self, startNode):
         g = self.graph
-        node = self.findStartNode(nodeDegrees)
-        
-        while(node is not None):
-            for succBase, edgeCount in g[node].items():
-                if self.edgeMarks[node][succBase] < edgeCount:
-                    nextNode = g[node[1:]+succBase]
-                    self.edgeMarks[node][succBase] += 1
-                    assembly += succBase
-                    node = nextNode 
-                    break
+        startNode = self.findStartNode()
+        if node is None:
+            return ''
+        path = node.key()
+        node = startNode
+        while 1:
+            if len(g[node] > 1):
+                path = self.findEulerPath(node)
 
-        return assembly
+            elif len(g[node] == 0):
+                break
+            succBase = next(iter(g[node]))
+            nextNode = g[node[1:]+succBase]
+            self.removeEdge(node, succBase)
+            path += succBase
+            node = nextNode 
+            break
+
+        return path
+
+
+
 
 
     def findStartNode(self, nodeDegrees):
         startNode = None
+        numStartNodes = 0
         for node in nodeDegrees:
-            if node == [0,1]:
-                startNode = node
-        '''if startNode is None:
-            for node in nodeDegrees:
-                if node[0] % 2 == 1 and node[1] % 2 == 1 and node[0] < node[1] and self.hasUmarkedEdges():'''
-        #I calculated an De-Brujin Graph from read sequences. Now I should find an assembly and thus an Euler Path or multiple Euler Paths. The first criteria to start  
+            if node[0]+1 == node[1] and len(self.graph[node]) > 0: # indegree+1==outdegree
+                numStartNodes += 1
+                if startNode is None:
+                    startNode = node
+        print(f'{numStartNodes} start nodes found')
         return startNode
     
 
-    def hasUmarkedEdges(self):
+    def removeEdge(self, node, succBase):
+        del self.graph[node][succBase]
+        if len(self.graph[node]) == 0:
+            del self.graph[node]
+
+
+    def hasUmarkedEdges(self, node):
         g = self.graph
-        for node in g:
-            for succBase in g[node]:
-                if self.edgeMarks[node][succBase] < g[node][succBase]:
-                    return True
+        for succBase in g[node]:
+            if self.edgeMarks[node][succBase] < g[node][succBase]:
+                return True
         return False
     
 
-    def writeAssemblyToFile(self, assembly, assemblyName):
+    def unitePaths(self, paths):
+        for 
+        return assembly
+
+
+    def writeAssemblyToFile(self, assembly):
         lineLen = 81
-        if self.numAssemblies == 0:
+        os.remove(self.outFile, exist_ok=True)
 
         with open(self.outFile, 'a') as f:
-            f.write(f'>{assemblyName}\n')
-            for i in range(len(assembly)//lineLen):
+            #f.write(f'>{pathName}\n')
+            for i in range(len(path)//lineLen):
                 f.write(assembly[i*lineLen:(i+1)*lineLen] + '\n')
             f.write(assembly[(len(assembly)//lineLen)*lineLen:] + '\n')
